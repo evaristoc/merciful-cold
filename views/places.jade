@@ -1,0 +1,145 @@
+extends layout
+
+block content
+    h1= title
+    h2= sessionid
+    button(id='button1', type='submit') My Profile
+    button(id='button2', type='submit') Test
+    
+    - var places = {places}
+    
+    table#t
+
+    script(type='text/javascript').
+      $(document).ready(function() {  
+      alert("Hello CodeProject!");});
+
+      var places = [];
+      var ids = [];
+      let url = new URL(window.location.href);
+      var sessionid = url.pathname.split('/')[-1];
+      //console.log( url.pathname.split('/').slice(-1) );
+      //https://stackoverflow.com/questions/2866063/submit-form-without-page-reloading
+
+
+      function toChoiceAPI(i, val) {
+          $('form#' + i).submit(function(e) {
+              console.log(e);
+              e.preventDefault();
+              $.ajax({
+                  url: 'https://'+process.env.PROJECT_DOMAIN+'.glitch.me/googlemaps/user/' + url.pathname.split('/').slice(-1)[0] + '/addchoice',
+                  type: 'POST',
+                  data: {
+                      choice: 'choice' + i,
+                      value: val
+                          //value: $('#button'+i).val()
+                  },
+                  success: function(msg) {
+                      //change button to "unselect option"
+                      alert('Choice Sent');
+                  }
+              });
+          })
+      }
+
+      function upload(i){
+          console.log($(this));
+          alert("Sending to Be Sent!");
+          return $('form#' + i).submit(function(e) {
+              console.log(e);
+              e.preventDefault();
+              $.ajax({
+                  url: 'https://merciful-cold.glitch.me/googlemaps/user/' + url.pathname.split('/').slice(-1)[0] + '/addchoice',
+                  type: 'POST',
+                  data: {
+                      choice: 'choice' + i,
+                      value: 'Hello, Server!!'
+                  },
+                  success: function(msg) {
+
+                      alert('Choice Sent');
+                  }
+              });
+          })
+      }
+
+      function toChoiceAPI(i){
+          //console.log(i);
+          window.stop();
+      }
+
+      //formmethod="post"
+      //onsubmit="return upload();"
+      function table(p){
+          $('tr').remove();
+          $('#t').append('<tr><th>Index</th><th>Source</th><th>Place</th><th>Id</th><th>Query</th><th>Choices</th></tr>')
+          $.each(p, function(i,v){
+              $('#t')
+              .append(`
+                  <tr>
+                      <td>${i}</td>
+                      <td>${v.source}</td>
+                      <td>${v.name}</td>
+                      <td>${v.id}</td>
+                      <td>${v.query}</td>
+                      <td>
+                          <form 
+                              id=${i}
+                              method="POST"
+                          >
+                              <button 
+                                  id="button${i}" 
+                                  type="submit"
+                                  formmethod="post"
+                                  name="choice${i}" 
+                                  value="${v.id}"
+                                  onclick="return upload(${i});"
+                              >
+                                  My Choice
+                              </button>
+                          </form>
+                      </td>
+                  </tr>
+                  `
+              )})
+
+      }
+
+      $('#button1').click(() => window.location = window.location.href + "/profile");
+
+      $('#button2').click(function(){
+          $.ajax({url: 'https://merciful-cold.glitch.me/googlemaps/data/'+url.pathname.split('/').slice(-1)[0]+'/places', 
+                  success:function(res){
+                              //res = $.parseJSON(res);
+                              if(res){
+                                  console.log('server response is', res);
+                                  if(res[0].status === 'CLOSED'){
+                                      document.getElementById('button1').disabled = true
+                                  }else{
+                                      res.filter((e)=>{return ids.indexOf(e.id) == -1}).forEach((e)=>{places.push(e)})
+                                      places.forEach((e)=> ids.push(e.id))
+                                      var currentUrl = new URL(window.location.href);
+                                      if(currentUrl.pathname == '/'){
+                                          currentUrl.pathname = '/search?'
+                                          let search_params = new URLSearchParams()
+                                          search_params.set('page',1)
+                                          console.log(places.length);
+                                          console.log(this)
+                                      }else{
+                                          let url = new URL(currentUrl);
+                                          let query_string = url.search;
+                                          let search_params = new URLSearchParams(query_string);
+                                          console.log(search_params.get('page'));
+                                          console.log(query_string);
+                                          search_params.set('page', Number(search_params.get('page'))+1);
+                                          url.search = search_params.toString();
+                                          console.log(places.length);
+                                          //console.log($('#t'))
+                                          table(places);
+                                      }
+                                  }
+                              }
+                          }           
+
+          });
+      });

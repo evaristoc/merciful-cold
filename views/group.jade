@@ -1,0 +1,103 @@
+extends layout
+
+block content
+  h1 Hello #{userid}
+  h2 Welcome to your Group profile
+  
+  p Your Choices 
+  ul
+    each ch in yourselection
+      li
+        div= ch
+        div
+          form(id='form1')
+            input(id=ch, type='submit' value='Delete' onclick="return serviceDeleteChoice('#{ch}');")
+
+  p My GroupID
+  ul
+    each g in yourgroups
+      li= g
+
+  p Members
+  ul
+    each mm in members
+      li
+        div= mm
+        div
+          form(id='form2')
+            input(id=mm, type='submit' value='Delete' onclick="return serviceDeleteMember('#{mm}');")
+
+  script(type='text/javascript').
+      var userid = '#{userid}';
+      var groupid = '#{groupid}';
+      function serviceDeleteChoice(ch){
+          //console.log($('#'+ch));
+          return $('form#form1').submit(function(event) {
+
+              /* stop form from submitting normally */
+              console.log(event);
+              event.preventDefault();
+
+              $.ajax({
+                        url: 'https://merciful-cold.glitch.me/googlemaps/user/'+userid+'/group/'+groupid+'/choice',
+                        type: 'DELETE',
+                        data: {
+                            name: ch,
+                            value: 'Hello, Server!!'
+                                //value: $('#button'+i).val()
+                        },
+                        complete: function () {
+                            // Handle the complete event
+                            alert("ajax completed");
+                        },
+                        success: function(msg) {
+                            console.log(msg);
+                            alert('Choice Deleted!');
+                        }
+                    });
+              
+              //- /* Send the data using post with element id name and name2*/
+              //- var posting = $.post( url, { memberid: $('#memberidval').val() } );
+
+              //- /* Alerts the results */
+              //- posting.done(function( data ) {
+              //-   alert('success');
+              //- });
+            });
+      }
+
+            function serviceDeleteMember(mm){
+          //console.log($('#'+ch));
+          return $('form#form2').submit(function(event) {
+
+              /* stop form from submitting normally */
+              console.log(event);
+              event.preventDefault();
+
+              $.ajax({
+                        url: 'https://merciful-cold.glitch.me/googlemaps/user/'+userid+'/group/'+groupid+'/member',
+                        type: 'DELETE',
+                        data: {
+                            name: mm,
+                            value: 'Hello, Server!!'
+                                //value: $('#button'+i).val()
+                        },
+                        complete: function () {
+                            // Handle the complete event
+                            alert("ajax completed");
+                        },
+                        success: function(msg) {
+                            console.log(msg);
+                            alert('Member Deleted!');
+                        }
+                    });
+              
+              //- /* Send the data using post with element id name and name2*/
+              //- var posting = $.post( url, { memberid: $('#memberidval').val() } );
+
+              //- /* Alerts the results */
+              //- posting.done(function( data ) {
+              //-   alert('success');
+              //- });
+            });
+      }

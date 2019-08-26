@@ -1,0 +1,29 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to your profile
+  form(action='http://localhost:3000/googlemaps/user/'+title+'/creategroup' method='POST' onsubmit='return data()')
+    input(type="text" name="field1" value="value1" placeholder='Group Name')
+    input(type="text" name="field2" value=title placeholder='Group Name')
+    input(id='button1', type='submit', value='Submit')
+  
+  p Choices
+  ul
+    each ch in yourselection
+      li= ch
+
+  p Groups
+  ul
+    each gr in yourgroups
+      li= gr
+
+  script(type='text/javascript').
+    var data = function(i,v){
+      return $('form').submit(function(e){
+        return {
+          groupname: e.currentTarget[0].value,
+          userid: e.currentTarget[1].value,
+        }
+      })
+    }

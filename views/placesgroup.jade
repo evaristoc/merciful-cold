@@ -1,0 +1,189 @@
+extends layout
+
+block content
+
+    h1 GroupID #{groupid}
+    h2 Administrator #{adminuserid}
+    h2 Your SessionID #{sessionid}
+    
+    p Create a New Group
+    form(id='form' action='https://merciful-cold.glitch.me/googlemaps/user/'+adminuserid+'/group' method='POST' onsubmit='return newGroupData()')
+      input(type="text" name="field1" value="value1" placeholder='Group Name')
+      input(type="text" name="field2" value=title placeholder='Group Name')
+      input(id='button1', type='submit', value='Submit')
+    p Welcome to Group Members
+    button(id='button3', type='submit') Do you want to add Members?
+    form(id="form1", action='https://merciful-cold.glitch.me/googlemaps/user/'+adminuserid+'/group/'+groupid+'/member', method='POST')
+        input(id="memberidval" name="memberid", placeholder='member id')
+        input(type="submit", value="Submit") 
+    button(id='button4', type='submit') Group Profile
+    button(id='button2', type='submit') Test    
+    - var places = {places}
+    table#t
+
+    script(type='text/javascript').
+      $(document).ready(function() { alert("Hello CodeProject!");});
+
+      var places = [];
+      var ids = [];
+      let url = new URL(window.location.href);
+      var sessionid = url.pathname.split('/')[-1];
+      var newGroupData = function(i,v){
+        return $('form').submit(function(e){
+          return {
+            groupname: e.currentTarget[0].value,
+            userid: e.currentTarget[1].value,
+          }
+        })
+      };
+
+
+
+
+      function serviceAddChoice(i){
+          console.log($(this));
+          alert("Choice to Be Sent!");
+          return $('form#' + i).submit(function(e) {
+              console.log(e);
+              e.preventDefault();
+              $.ajax({
+                  url: url.pathname + '/choice',
+                  type: 'POST',
+                  data: {
+                      choice: 'choice' + i,
+                      value: 'Hello, Server!!'
+                          //value: $('#button'+i).val()
+                  },
+                  success: function(msg) {
+
+                      alert('Choice Sent');
+                  }
+              });
+          })
+      };
+      $("#form1").submit(function(event) {
+
+        /* stop form from submitting normally */
+        //console.log(event);
+        event.preventDefault();
+
+        /* get the action attribute from the <form action=""> element */
+        var $form = $( this ),
+            url = $form.attr( 'action' );
+
+        $.ajax({
+                  url: url,
+                  type: 'POST',
+                  data: {
+                      memberid: $('#memberidval').val(),
+                      value: 'Hello, Server!!'
+                          //value: $('#button'+i).val()
+                  },
+                  complete: function () {
+                      // Handle the complete event
+                      alert("ajax completed");
+                  },
+                  success: function(msg) {
+                      console.log(msg);
+                      alert('New Member Added!');
+                  }
+              });
+
+        //- /* Send the data using post with element id name and name2*/
+        //- var posting = $.post( url, { memberid: $('#memberidval').val() } );
+
+        //- /* Alerts the results */
+        //- posting.done(function( data ) {
+        //-   alert('success');
+        //- });
+      });
+
+
+      function toChoiceAPI(i){
+          //console.log(i);
+          window.stop();
+      };
+
+      function table(p){
+          $('tr').remove();
+          $('#t').append('<tr><th>Index</th><th>Source</th><th>Place</th><th>Id</th><th>Query</th><th>Choices</th></tr>')
+          $.each(p, function(i,v){
+              $('#t')
+              .append(`
+                  <tr>
+                      <td>${i}</td>
+                      <td>${v.source}</td>
+                      <td>${v.name}</td>
+                      <td>${v.id}</td>
+                      <td>${v.query}</td>
+                      <td>
+                          <form 
+                              id=${i}
+                              method="POST"
+                          >
+                              <button 
+                                  id="button${i}" 
+                                  type="submit"
+                                  formmethod="post"
+                                  name="choice${i}" 
+                                  value="${v.id}"
+                                  onclick="return serviceAddChoice(${i});"
+                              >
+                                  My Choice
+                              </button>
+                          </form>
+                      </td>
+                  </tr>
+                  `
+              )})
+      }
+      //console.log(url.pathname);
+
+      $('#button4')
+      .click(function(){
+        console.log('button1 clicked');
+        window.location = url.pathname + '/profile'}
+        );
+
+      //console.log('http://localhost:3000/googlemaps/data/'+ url.pathname.split('/').slice(-2)[0] + '/' + url.pathname.split('/').slice(-1)[0] + '/places');
+
+      $('#button2')
+      .click(function(){
+          console.log('button2 clicked');
+          console.log(url.pathname);
+          $.ajax({url: url.pathname + '/data-apis',
+
+                  success:function(res){
+                              //res = $.parseJSON(res);
+                              if(res){
+                                  console.log('server response is', res);
+                                  if(res[0].status === 'CLOSED'){
+                                      document.getElementById('button1').disabled = true
+                                  }else{
+                                      res.filter((e)=>{return ids.indexOf(e.id) == -1}).forEach((e)=>{places.push(e)})
+                                      places.forEach((e)=> ids.push(e.id))
+                                      var currentUrl = new URL(window.location.href);
+                                      if(currentUrl.pathname == '/'){
+                                          currentUrl.pathname = '/search?'
+                                          let search_params = new URLSearchParams()
+                                          search_params.set('page',1)
+                                          console.log(places.length);
+                                          console.log(this)
+                                      }else{
+                                          let url = new URL(currentUrl);
+                                          let query_string = url.search;
+                                          let search_params = new URLSearchParams(query_string);
+                                          console.log(search_params.get('page'));
+                                          console.log(query_string);
+                                          search_params.set('page', Number(search_params.get('page'))+1);
+                                          url.search = search_params.toString();
+                                          console.log(places.length);
+                                          //console.log($('#t'))
+                                          table(places);
+                                      }
+                                  }
+                              }
+                          }           
+
+          });
+      });
